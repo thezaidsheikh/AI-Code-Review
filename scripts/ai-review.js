@@ -46,7 +46,6 @@ async function main() {
 
   // Get changed files (with patches)
   const files = await octokit.paginate(octokit.pulls.listFiles, { owner, repo, pull_number, per_page: 100 });
-
   // Select files to review (by type + glob)
   const selected = files.filter((f) => isTextFile(f.filename) && (!FILE_GLOBS.length || pickFiles([f.filename], FILE_GLOBS).length));
 
