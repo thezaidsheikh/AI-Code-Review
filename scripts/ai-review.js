@@ -1,7 +1,11 @@
 // Import required modules
 const fs = require("fs");
 const path = require("path");
-const { Octokit } = require("@octokit/rest");
+let Octokit;
+(async () => {
+  const esmModule = await import("@octokit/rest");
+  Octokit = esmModule.default();
+})();
 const { chunkText, isTextFile, pickFiles } = require("./util");
 
 // Get environment variables

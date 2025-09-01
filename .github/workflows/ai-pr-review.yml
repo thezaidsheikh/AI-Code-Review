@@ -37,4 +37,4 @@ jobs:
           TEMPERATURE: "0.2"
           FILE_GLOBS: "src/**,app/**,lib/**,*.{ts,tsx,js,jsx,py,go,rb,java,cs}"
         run: |
-          node .ai-pr-review/scripts/ai-review.js
+          node ./scripts/ai-review.js
