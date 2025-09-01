@@ -48,7 +48,7 @@ async function main() {
   const files = await octokit.paginate(octokit.pulls.listFiles, { owner, repo, pull_number, per_page: 100 });
   // Select files to review (by type + glob)
   const selected = files.filter((f) => isTextFile(f.filename) && (!FILE_GLOBS.length || pickFiles([f.filename], FILE_GLOBS).length));
-
+  console.log("Selected 1 ====>", JSON.stringify(selected));
   // Build prompt input from patches (unified diff). Limit total size.
   const DIFF_LIMIT_CHARS = 120_000; // guardrail for token/cost
   let total = 0;
