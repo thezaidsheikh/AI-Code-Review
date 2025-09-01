@@ -85,7 +85,7 @@ async function callGoogle({ model, system, user, maxTokens, temperature }) {
         {
           parts: [
             {
-              text: input,
+              text: `${system}\n\n${user}`,
             },
           ],
         },
