@@ -19,6 +19,7 @@ const FILE_GLOBS = (process.env.FILE_GLOBS || "")
 
 // Main function
 async function main() {
+  console.log("Starting AI PR review in main ...");
   if (!GH_EVENT_PATH || !GH_TOKEN || !GH_REPOSITORY) {
     throw new Error("Missing required GitHub env (GITHUB_EVENT_PATH, GITHUB_TOKEN, GITHUB_REPOSITORY).");
   }

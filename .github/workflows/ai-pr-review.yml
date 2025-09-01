@@ -11,7 +11,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  review:
+  AI-PR-Review:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,6 @@ jobs:
 
       - name: Install deps
         run: |
-          cd .ai-pr-review
           npm ci || npm i
 
       - name: Run AI review
