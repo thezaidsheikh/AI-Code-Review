@@ -44,6 +44,7 @@ function pickFiles(files, globs) {
   for (const f of files) {
     if (globs.some((g) => minimatch(f, g))) res.push(f);
   }
+  console.log("pickFiles ====>", JSON.stringify(res));
   return res;
 }
 
