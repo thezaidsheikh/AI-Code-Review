@@ -25,6 +25,15 @@ async function main() {
     throw new Error("Missing required GitHub env (GITHUB_EVENT_PATH, GITHUB_TOKEN, GITHUB_REPOSITORY).");
   }
 
+  console.log("GH_EVENT_PATH: ", GH_EVENT_PATH);
+  console.log("GH_TOKEN: ", GH_TOKEN);
+  console.log("GH_REPOSITORY: ", GH_REPOSITORY);
+  console.log("LLM_PROVIDER: ", LLM_PROVIDER);
+  console.log("MODEL: ", MODEL);
+  console.log("MAX_TOKENS: ", MAX_TOKENS);
+  console.log("TEMPERATURE: ", TEMPERATURE);
+  console.log("FILE_GLOBS: ", FILE_GLOBS);
+
   const event = JSON.parse(fs.readFileSync(GH_EVENT_PATH, "utf8"));
   const { number: pull_number } = event.pull_request || {};
   if (!pull_number) throw new Error("This workflow must run on pull_request events.");
@@ -71,15 +80,15 @@ async function main() {
     `\nDIFFS (unified):\n${chunkText(diffs.join("\n\n"), 100_000)}`,
   ].join("\n");
 
-  const { callLLM } = require("./llm");
-  const review = await callLLM({
-    provider: LLM_PROVIDER,
-    model: MODEL,
-    system,
-    user: input,
-    maxTokens: MAX_TOKENS,
-    temperature: TEMPERATURE,
-  });
+  // const { callLLM } = require("./llm");
+  // const review = await callLLM({
+  //   provider: LLM_PROVIDER,
+  //   model: MODEL,
+  //   system,
+  //   user: input,
+  //   maxTokens: MAX_TOKENS,
+  //   temperature: TEMPERATURE,
+  // });
 
   // Post a PR review (general comment). Inline suggestions are an advanced follow-up.
   await octokit.pulls.createReview({
@@ -87,7 +96,8 @@ async function main() {
     repo,
     pull_number,
     event: "COMMENT",
-    body: review.trim().slice(0, 65_000), // server-side guardrail
+    // body: review.trim().slice(0, 65_000), // server-side guardrail
+    body: "Working fine",
   });
 
   console.log("AI review posted.");

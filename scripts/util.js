@@ -1,4 +1,4 @@
-const minimatch = require("minimatch");
+const { minimatch } = require("minimatch");
 
 function chunkText(text, limit) {
   if (text.length <= limit) return text;
