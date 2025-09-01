@@ -68,7 +68,7 @@ async function main() {
   }
 
   if (!diffs.length) {
-    console.log("No textual diffs to review. Exiting.");
+    console.error("❌ No textual diffs to review. Exiting.");
     return;
   }
 
@@ -104,7 +104,7 @@ async function main() {
     body: review.trim().slice(0, 65_000), // server-side guardrail
   });
 
-  console.log("AI review posted.");
+  console.log("✅ AI review posted.");
 }
 
 main().catch((err) => {
