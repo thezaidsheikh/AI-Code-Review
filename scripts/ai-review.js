@@ -1,11 +1,6 @@
 // Import required modules
 const fs = require("fs");
 const path = require("path");
-let Octokit;
-(async () => {
-  const esmModule = await import("@octokit/rest");
-  Octokit = esmModule.default();
-})();
 const { chunkText, isTextFile, pickFiles } = require("./util");
 
 // Get environment variables
@@ -24,6 +19,8 @@ const FILE_GLOBS = (process.env.FILE_GLOBS || "")
 // Main function
 async function main() {
   console.log("Starting AI PR review in main ...");
+  const { Octokit } = await import("@octokit/rest");
+
   if (!GH_EVENT_PATH || !GH_TOKEN || !GH_REPOSITORY) {
     throw new Error("Missing required GitHub env (GITHUB_EVENT_PATH, GITHUB_TOKEN, GITHUB_REPOSITORY).");
   }
