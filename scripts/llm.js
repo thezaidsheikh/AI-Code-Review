@@ -95,7 +95,7 @@ async function callGoogle({ model, system, user, maxTokens, temperature }) {
   if (!res.ok) throw new Error(`Google error: ${res.status} ${await res.text()}`);
   const json = await res.json();
   console.log("Google response: ", JSON.stringify(json));
-  return json.message?.content || "";
+  return json.candidates?.[0].content?.parts?.[0].text || "";
 }
 
 exports.callLLM = async (cfg) => {

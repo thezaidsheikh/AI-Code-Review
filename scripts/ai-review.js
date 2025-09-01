@@ -102,7 +102,6 @@ async function main() {
     pull_number,
     event: "COMMENT",
     body: review.trim().slice(0, 65_000), // server-side guardrail
-    body: "Working fine",
   });
 
   console.log("AI review posted.");

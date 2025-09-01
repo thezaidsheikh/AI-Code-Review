@@ -16,4 +16,4 @@ Score each area ✅/⚠️ and then propose fixes:
 
 - Races, deadlocks, async misuse, blocking calls in event loops
 
-5. API
+5. Make sure you provide concise and on point review without going to much into details
