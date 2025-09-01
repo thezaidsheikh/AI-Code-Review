@@ -12,7 +12,7 @@ const MODEL = process.env.MODEL || "gpt-4o-mini";
 const MAX_TOKENS = parseInt(process.env.MAX_TOKENS || "2500", 10);
 const TEMPERATURE = parseFloat(process.env.TEMPERATURE || "0.2");
 const FILE_GLOBS = (process.env.FILE_GLOBS || "")
-  .split(",")
+  .split(/\r?\n/)
   .map((s) => s.trim())
   .filter(Boolean);
 
