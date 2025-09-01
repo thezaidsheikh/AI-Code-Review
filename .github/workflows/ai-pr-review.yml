@@ -24,7 +24,7 @@ jobs:
 
       - name: Install deps
         run: |
-          npm ci || npm i
+          pnpm ci || pnpm i
 
       - name: Run AI review
         env:
