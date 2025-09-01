@@ -72,8 +72,30 @@ async function callOllama({ model, system, user, maxTokens, temperature }) {
   return json.message?.content || "";
 }
 
+async function callGoogle({ model, system, user, maxTokens, temperature }) {
+  assert(apiKey, process.env.AI_API_KEY);
+  const base = process.env.BASE_URL || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const res = await fetch(`${base}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      options: { temperature, num_predict: maxTokens },
+    }),
+  });
+  if (!res.ok) throw new Error(`Google error: ${res.status} ${await res.text()}`);
+  const json = await res.json();
+  console.log("Google response: ", JSON.stringify(json));
+  return json.message?.content || "";
+}
+
 exports.callLLM = async (cfg) => {
-  const p = (cfg.provider || "openai").toLowerCase();
+  const p = (cfg.provider || "google").toLowerCase();
+  if (p === "google") return callGoogle(cfg);
   if (p === "openai") return callOpenAI(cfg);
   if (p === "openrouter") return callOpenRouter(cfg);
   if (p === "ollama") return callOllama(cfg);

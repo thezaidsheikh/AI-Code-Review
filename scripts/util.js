@@ -6,7 +6,6 @@ function chunkText(text, limit) {
 }
 
 function isTextFile(filename) {
-  console.log("fileName ====>", filename);
   const textExt = [
     ".js",
     ".jsx",
