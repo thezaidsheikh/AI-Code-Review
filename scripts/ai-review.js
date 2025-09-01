@@ -90,6 +90,10 @@ async function main() {
   //   temperature: TEMPERATURE,
   // });
 
+  console.log("Pull number: ", pull_number);
+  console.log("Owner: ", owner);
+  console.log("Repo: ", repo);
+  console.log("User: ", input);
   // Post a PR review (general comment). Inline suggestions are an advanced follow-up.
   await octokit.pulls.createReview({
     owner,
