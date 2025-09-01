@@ -1,0 +1,17 @@
+{
+  "name": "AI-Code-Review",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "Zaid Qureshi",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "dependencies": {
+    "@octokit/rest": "^22.0.0",
+    "minimatch": "^10.0.3"
+  }
+}
