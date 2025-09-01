@@ -81,12 +81,15 @@ async function callGoogle({ model, system, user, maxTokens, temperature }) {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
     body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
+      contents: [
+        {
+          parts: [
+            {
+              text: input,
+            },
+          ],
+        },
       ],
-      options: { temperature, num_predict: maxTokens },
     }),
   });
   if (!res.ok) throw new Error(`Google error: ${res.status} ${await res.text()}`);
