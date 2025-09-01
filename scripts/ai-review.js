@@ -54,6 +54,7 @@ async function main() {
   let total = 0;
   const diffs = [];
   for (const f of selected) {
+    console.log("Selected ====>", JSON.stringify(f));
     if (!f.patch) continue; // binary or too large
     const chunk = `FILE: ${f.filename}\nSTATUS: ${f.status} additions:${f.additions} deletions:${f.deletions}\n---PATCH BEGIN---\n${f.patch}\n---PATCH END---`;
     if (total + chunk.length > DIFF_LIMIT_CHARS) continue;
