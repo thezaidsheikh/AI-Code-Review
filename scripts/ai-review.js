@@ -128,7 +128,8 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
         pull_number,
         event: "COMMENT",
         body: `AI-generated code review for ${selectedFilesCount} file(s).`,
-        comments: githubComments
+        comments: githubComments,
+        subject_type: 'file',
       });
       
       console.log(`✅ AI review posted with ${githubComments.length} file-specific comments.`);
