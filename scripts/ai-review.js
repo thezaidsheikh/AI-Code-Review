@@ -95,102 +95,16 @@ async function main() {
     temperature: TEMPERATURE,
   });
 
-  // Process AI response and post review
-  await processAIResponseAndPostReview(octokit, owner, repo, pull_number, review, selected.length);
-
   // Post a PR review (general comment). Inline suggestions are an advanced follow-up.
-  // await octokit.pulls.createReview({
-  //   owner,
-  //   repo,
-  //   pull_number,
-  //   event: "COMMENT",
-  //   comments: JSON.parse(review), // server-side guardrail
-  // });
-
-  // console.log("✅ AI review posted.");
-}
-
-// Main function to handle AI response and post GitHub review
-async function processAIResponseAndPostReview(octokit, owner, repo, pull_number, aiResponse, selectedFilesCount) {
-  
-  try {
-    // Parse the AI response
-    const parsedComments = cleanAndParseAIResponse(aiResponse);
-    
-    // Convert to GitHub comment format
-    const githubComments = convertToGitHubComments(parsedComments);
-    console.log("githubComments =====>", githubComments.length);
-    // Post PR review with inline comments
-    if (githubComments.length > 0) {
-      await octokit.pulls.createReview({
-        owner,
-        repo,
-        pull_number,
-        event: "COMMENT",
-        body: `AI-generated code review for ${selectedFilesCount} file(s).`,
-        comments: githubComments,
-      });
-      
-      console.log(`✅ AI review posted with ${githubComments.length} file-specific comments.`);
-      return { success: true, type: 'inline', commentCount: githubComments.length };
-    } else {
-      console.log("⚠️ No valid comments generated, posting general review.");
-      return await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "No valid comments generated");
-    }
-    
-  } catch (parseError) {
-    console.error("Failed to parse AI response:", parseError.message);
-    console.log("Raw AI response:", aiResponse);
-    
-    return await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "JSON parsing failed");
-  }
-}
-
-// Helper function to post general review as fallback
-async function postGeneralReview(octokit, owner, repo, pull_number, aiResponse, reason) {
   await octokit.pulls.createReview({
     owner,
     repo,
     pull_number,
     event: "COMMENT",
-    body: `AI Code Review:\n\n${aiResponse.trim().slice(0, 65000)}`
+    body: review.trim().slice(0, 65_000), // server-side guardrail
   });
-  
-  console.log(`✅ AI review posted as general comment (fallback: ${reason}).`);
-  return { success: true, type: 'general', reason };
-}
 
-// Helper function to clean and parse AI response
-function cleanAndParseAIResponse(aiResponse) {
-  let cleanedResponse = aiResponse.trim();
-  
-  // Remove markdown code block formatting if present
-  if (cleanedResponse.startsWith('```json')) {
-    cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-  } else if (cleanedResponse.startsWith('```')) {
-    cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
-  }
-  
-  return JSON.parse(cleanedResponse);
-}
-
-// Helper function to convert AI comments to GitHub format
-function convertToGitHubComments(aiComments) {
-  if (!Array.isArray(aiComments)) {
-    throw new Error("AI response is not an array");
-  }
-  
-  return aiComments.map(item => {
-    if (!item.fileName || !item.comment) {
-      throw new Error("Invalid comment object structure: missing fileName or comment");
-    }
-    
-    return {
-      path: item.fileName,
-      body: item.comment,
-      subject_type: "file"
-    };
-  });
+  console.log("✅ AI review posted.");
 }
 
 main().catch((err) => {
