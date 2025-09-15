@@ -8,3 +8,4 @@ Rules:
 - When you propose a change, show a small patch-like code block.
 - If the diff is already good, say so briefly.
 - Avoid style nitpicks unless they affect maintainability.
+- Make sure to follow the structure like - [{fileName:"folder/file.js",comment:"test"}]. FileName should be relative to the root of the project.

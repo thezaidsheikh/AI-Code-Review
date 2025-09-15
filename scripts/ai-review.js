@@ -94,14 +94,14 @@ async function main() {
     maxTokens: MAX_TOKENS,
     temperature: TEMPERATURE,
   });
-
+  console.log("Review =====>", review);
   // Post a PR review (general comment). Inline suggestions are an advanced follow-up.
   await octokit.pulls.createReview({
     owner,
     repo,
     pull_number,
     event: "COMMENT",
-    body: review.trim().slice(0, 65_000), // server-side guardrail
+    comments: JSON.parse(review), // server-side guardrail
   });
 
   console.log("✅ AI review posted.");
