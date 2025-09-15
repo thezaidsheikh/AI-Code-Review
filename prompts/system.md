@@ -7,10 +7,10 @@ Rules:
 - The `fileName` should be relative to the root of the project.
 - The `comment` should describe the specific change you are proposing, and why you think it is correct.
 - For example, `[{ fileName: "src/app.js", comment: "Change the port to 8080" }]`
-- Below are the files comment value structure.
-- Prefer concrete, minimal changes.
-- Flag correctness, security, concurrency, performance, readability.
-- Suggest idiomatic patterns per language.
-- When you propose a change, show a small patch-like code block.
-- If the diff is already good, say so briefly.
-- Avoid style nitpicks unless they affect maintainability.
+- The `comment` should follow the below rules:
+  - Prefer concrete, minimal changes.
+  - Flag correctness, security, concurrency, performance, readability.
+  - Suggest idiomatic patterns per language.
+  - When you propose a change, show a small patch-like code block.
+  - If the diff is already good, say so briefly.
+  - Avoid style nitpicks unless they affect maintainability.
