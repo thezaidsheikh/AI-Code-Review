@@ -129,7 +129,6 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
         event: "COMMENT",
         body: `AI-generated code review for ${selectedFilesCount} file(s).`,
         comments: githubComments,
-        subject_type: 'file',
       });
       
       console.log(`✅ AI review posted with ${githubComments.length} file-specific comments.`);
@@ -189,7 +188,7 @@ function convertToGitHubComments(aiComments) {
     return {
       path: item.fileName,
       body: item.comment,
-      line: 1 // Default to line 1 for file-level comments
+      subject_type: "file"
     };
   });
 }
