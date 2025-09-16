@@ -120,7 +120,8 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
 
     // Convert to GitHub comment format
     const githubComments = convertToGitHubComments(parsedComments);
-    console.log("githubComments =====>", githubComments.length);
+    console.log("githubComments length =====>", githubComments.length);
+    console.log("githubComments =====>", JSON.stringify(githubComments));
     // Post PR review with inline comments
     if (githubComments.length > 0) {
       await octokit.pulls.createReview({
