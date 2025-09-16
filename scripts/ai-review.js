@@ -58,10 +58,12 @@ async function main() {
   const DIFF_LIMIT_CHARS = 120_000; // guardrail for token/cost
   let total = 0;
   const diffs = [];
+
   for (const f of selected) {
-    console.log(`Extracting diff for file ${f.filename} =====>`, JSON.stringify(f));
+    const diff = JSON.stringify(f);
+    console.log(`Extracting diff for file ${f.filename} =====>`, diff);
     if (!f.patch) continue; // binary or too large
-    const chunk = `FILE: ${f.filename}\nSTATUS: ${f.status} additions:${f.additions} deletions:${f.deletions}\n---PATCH BEGIN---\n${f.patch}\n---PATCH END---`;
+    const chunk = `FILE: ${f.filename}\nSTATUS: ${f.status} additions:${f.additions} deletions:${f.deletions}\nDIFF: \n${diff}`;
     if (total + chunk.length > DIFF_LIMIT_CHARS) continue;
     diffs.push(chunk);
     total += chunk.length;
@@ -112,12 +114,10 @@ async function main() {
 
 // Main function to handle AI response and post GitHub review
 async function processAIResponseAndPostReview(octokit, owner, repo, pull_number, aiResponse, selectedFilesCount) {
-  console.log("Review =====>", aiResponse);
-  
   try {
     // Parse the AI response
     const parsedComments = cleanAndParseAIResponse(aiResponse);
-    
+
     // Convert to GitHub comment format
     const githubComments = convertToGitHubComments(parsedComments);
     console.log("githubComments =====>", githubComments.length);
@@ -129,20 +129,19 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
         pull_number,
         event: "COMMENT",
         body: `AI-generated code review for ${selectedFilesCount} file(s).`,
-        comments: githubComments
+        comments: githubComments,
       });
-      
+
       console.log(`✅ AI review posted with ${githubComments.length} file-specific comments.`);
-      return { success: true, type: 'inline', commentCount: githubComments.length };
+      return { success: true, type: "inline", commentCount: githubComments.length };
     } else {
       console.log("⚠️ No valid comments generated, posting general review.");
       return await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "No valid comments generated");
     }
-    
   } catch (parseError) {
     console.error("Failed to parse AI response:", parseError.message);
     console.log("Raw AI response:", aiResponse);
-    
+
     return await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "JSON parsing failed");
   }
 }
@@ -154,44 +153,65 @@ async function postGeneralReview(octokit, owner, repo, pull_number, aiResponse, 
     repo,
     pull_number,
     event: "COMMENT",
-    body: `AI Code Review:\n\n${aiResponse.trim().slice(0, 65000)}`
+    body: `AI Code Review:\n\n${aiResponse.trim().slice(0, 65000)}`,
   });
-  
+
   console.log(`✅ AI review posted as general comment (fallback: ${reason}).`);
-  return { success: true, type: 'general', reason };
+  return { success: true, type: "general", reason };
 }
 
 // Helper function to clean and parse AI response
 function cleanAndParseAIResponse(aiResponse) {
   let cleanedResponse = aiResponse.trim();
-  
+
   // Remove markdown code block formatting if present
-  if (cleanedResponse.startsWith('```json')) {
-    cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-  } else if (cleanedResponse.startsWith('```')) {
-    cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  if (cleanedResponse.startsWith("```json")) {
+    cleanedResponse = cleanedResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+  } else if (cleanedResponse.startsWith("```")) {
+    cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "");
   }
-  
+
   return JSON.parse(cleanedResponse);
 }
 
 // Helper function to convert AI comments to GitHub format
 function convertToGitHubComments(aiComments) {
+  console.log("aiComments =====>", JSON.stringify(aiComments));
   if (!Array.isArray(aiComments)) {
     throw new Error("AI response is not an array");
   }
-  
-  return aiComments.map(item => {
-    if (!item.fileName || !item.comment) {
-      throw new Error("Invalid comment object structure: missing fileName or comment");
+
+  // Create a map to group comments by file
+  const fileCommentsMap = new Map();
+
+  aiComments.forEach((item) => {
+    // Ensure the AI-generated comment object has the required structure.
+    if (!item.fileName || typeof item.comments !== "object" || Object.keys(item.comments).length === 0) {
+      throw new Error("Invalid comment object structure: missing fileName or comments object");
     }
-    
-    return {
-      path: item.fileName,
-      body: item.comment,
-      line: 1 // Default to line 1 for file-level comments
-    };
+
+    const fileName = item.fileName;
+
+    // Initialize the file's comment array if it doesn't exist
+    if (!fileCommentsMap.has(fileName)) {
+      fileCommentsMap.set(fileName, []);
+    }
+
+    // Iterate over each comment for the current file
+    for (const absolutePosition in item.comments) {
+      const commentBody = item.comments[absolutePosition];
+
+      // Add the comment to the file's array
+      fileCommentsMap.get(fileName).push({
+        path: fileName,
+        position: parseInt(absolutePosition),
+        body: commentBody,
+      });
+    }
   });
+
+  // Convert the map back to the desired array format for the GitHub API
+  return Array.from(fileCommentsMap.values()).flat();
 }
 
 main().catch((err) => {
