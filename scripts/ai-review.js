@@ -120,7 +120,8 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
 
     // Convert to GitHub comment format
     const githubComments = convertToGitHubComments(parsedComments);
-    console.log("githubComments =====>", githubComments.length);
+    console.log("githubComments length =====>", githubComments.length);
+    console.log("githubComments =====>", JSON.stringify(githubComments));
     // Post PR review with inline comments
     if (githubComments.length > 0) {
       await octokit.pulls.createReview({
@@ -176,42 +177,36 @@ function cleanAndParseAIResponse(aiResponse) {
 
 // Helper function to convert AI comments to GitHub format
 function convertToGitHubComments(aiComments) {
-  console.log("aiComments =====>", JSON.stringify(aiComments));
   if (!Array.isArray(aiComments)) {
     throw new Error("AI response is not an array");
   }
 
-  // Create a map to group comments by file
-  const fileCommentsMap = new Map();
+  const githubComments = [];
 
-  aiComments.forEach((item) => {
-    // Ensure the AI-generated comment object has the required structure.
-    if (!item.fileName || typeof item.comments !== "object" || Object.keys(item.comments).length === 0) {
-      throw new Error("Invalid comment object structure: missing fileName or comments object");
+  for (const fileObject of aiComments) {
+    if (!fileObject.fileName || !fileObject.comments || !Array.isArray(fileObject.comments)) {
+      console.error("Invalid file object structure:", fileObject);
+      continue;
     }
 
-    const fileName = item.fileName;
+    const path = fileObject.fileName;
+    const commentsArray = fileObject.comments;
 
-    // Initialize the file's comment array if it doesn't exist
-    if (!fileCommentsMap.has(fileName)) {
-      fileCommentsMap.set(fileName, []);
-    }
+    for (const comment of commentsArray) {
+      if (comment.absolutePosition === undefined || comment.value === undefined) {
+        console.error("Invalid comment object structure:", comment);
+        continue;
+      }
 
-    // Iterate over each comment for the current file
-    for (const absolutePosition in item.comments) {
-      const commentBody = item.comments[absolutePosition];
-
-      // Add the comment to the file's array
-      fileCommentsMap.get(fileName).push({
-        path: fileName,
-        position: parseInt(absolutePosition),
-        body: commentBody,
+      githubComments.push({
+        path: path,
+        position: parseInt(comment.absolutePosition),
+        body: comment.value,
       });
     }
-  });
+  }
 
-  // Convert the map back to the desired array format for the GitHub API
-  return Array.from(fileCommentsMap.values()).flat();
+  return githubComments;
 }
 
 main().catch((err) => {
