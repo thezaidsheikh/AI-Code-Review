@@ -199,8 +199,9 @@ function convertToGitHubComments(aiComments) {
     }
 
     // Iterate over each comment for the current file
-    for (const absolutePosition in item.comments) {
-      const commentBody = item.comments[absolutePosition];
+    for (const reviewComment in item.comments) {
+      const commentBody = reviewComment?.value || "";
+      const absolutePosition = reviewComment?.absolutePosition || 0;
 
       // Add the comment to the file's array
       fileCommentsMap.get(fileName).push({
