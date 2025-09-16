@@ -176,7 +176,7 @@ function cleanAndParseAIResponse(aiResponse) {
 
 // Helper function to convert AI comments to GitHub format
 function convertToGitHubComments(aiComments) {
-  console.log("aiComments =====>", aiComments);
+  console.log("aiComments =====>", JSON.stringify(aiComments));
   if (!Array.isArray(aiComments)) {
     throw new Error("AI response is not an array");
   }
