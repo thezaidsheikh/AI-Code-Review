@@ -34,12 +34,7 @@ async function main() {
   const octokit = new Octokit({ auth: GH_TOKEN });
 
   console.log("GH_EVENT_PATH: ", GH_EVENT_PATH);
-  console.log("GH_TOKEN: ", GH_TOKEN);
   console.log("GH_REPOSITORY: ", GH_REPOSITORY);
-  console.log("LLM_PROVIDER: ", LLM_PROVIDER);
-  console.log("MODEL: ", MODEL);
-  console.log("MAX_TOKENS: ", MAX_TOKENS);
-  console.log("TEMPERATURE: ", TEMPERATURE);
   console.log("FILE_GLOBS: ", FILE_GLOBS);
   console.log("owner: ", owner);
   console.log("repo: ", repo);
@@ -99,17 +94,6 @@ async function main() {
 
   // Process AI response and post review
   await processAIResponseAndPostReview(octokit, owner, repo, pull_number, review, selected.length);
-
-  // Post a PR review (general comment). Inline suggestions are an advanced follow-up.
-  // await octokit.pulls.createReview({
-  //   owner,
-  //   repo,
-  //   pull_number,
-  //   event: "COMMENT",
-  //   comments: JSON.parse(review), // server-side guardrail
-  // });
-
-  // console.log("✅ AI review posted.");
 }
 
 // Main function to handle AI response and post GitHub review
@@ -121,7 +105,7 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
     // Convert to GitHub comment format
     const githubComments = convertToGitHubComments(parsedComments);
     console.log("githubComments length =====>", githubComments.length);
-    console.log("githubComments =====>", JSON.stringify(githubComments));
+
     // Post PR review with inline comments
     if (githubComments.length > 0) {
       await octokit.pulls.createReview({
