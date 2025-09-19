@@ -84,10 +84,8 @@ async function main() {
       `\nDIFFS (unified):\n${chunkText(diffs.join("\n\n"), 100_000)}`,
     ].join("\n");
 
-    // Call LLM to get AI review
+    // Call LLM to get AI response
     const { callLLM } = require("./llm");
-
-    // Call LLM to get AI review
     const review = await callLLM({
       provider: LLM_PROVIDER,
       model: MODEL,
@@ -96,8 +94,6 @@ async function main() {
       maxTokens: MAX_TOKENS,
       temperature: TEMPERATURE,
     });
-
-    let count = 0;
 
     // Process AI response and post review
     await processAIResponseAndPostReview(octokit, owner, repo, pull_number, review, selected.length);
