@@ -2,6 +2,7 @@ const assert = (cond, msg) => {
   if (!cond) throw new Error(msg);
 };
 
+// Call OpenAI API
 async function callOpenAI({ model, system, user, maxTokens, temperature }) {
   const apiKey = process.env.OPENAI_API_KEY;
   assert(apiKey, 'OPENAI_API_KEY is required for provider "openai"');
@@ -28,6 +29,7 @@ async function callOpenAI({ model, system, user, maxTokens, temperature }) {
   return json.choices?.[0]?.message?.content || "";
 }
 
+// Call OpenRouter API
 async function callOpenRouter({ model, system, user, maxTokens, temperature }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   assert(apiKey, 'OPENROUTER_API_KEY is required for provider "openrouter"');
@@ -53,6 +55,7 @@ async function callOpenRouter({ model, system, user, maxTokens, temperature }) {
   return json.choices?.[0]?.message?.content || "";
 }
 
+// Call Ollama API
 async function callOllama({ model, system, user, maxTokens, temperature }) {
   const base = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
   const res = await fetch(`${base}/api/chat`, {
