@@ -37,6 +37,8 @@ rules:
 - fileName: Relative path of the file from the project root.
 - comments: Array of objects with absolutePosition as key and detailed reviewer comments as values.
 - Important constraints:
+  - Make sure to provide the review for those which is important and necessary.
+  - Don't provide review which is already correct and not needed.
   - Each fileName must be unique (do not repeat file objects).
   - Each comment must be specific and pragmatic—focusing on:
     - Correctness
