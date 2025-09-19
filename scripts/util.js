@@ -5,6 +5,7 @@ function chunkText(text, limit) {
   return text.slice(0, limit);
 }
 
+// Check file is text file or not
 function isTextFile(filename) {
   const textExt = [
     ".js",
