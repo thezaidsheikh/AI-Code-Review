@@ -11,10 +11,12 @@ Always return only an **array of objects**, each with this structure:
     "fileName": "relative/path/to/file.js",
     "comments": [
       {
-        "absolutePosition": "Reviewer's precise comment..."
+        "absolutePosition": "6",
+        "value": "Reviewer's precise comment..."
       },
       {
-        "absolutePosition": "Reviewer's precise comment1..."
+        "absolutePosition": "11",
+        "value": "Reviewer's precise comment..."
       }
     ]
   }
@@ -23,9 +25,9 @@ Always return only an **array of objects**, each with this structure:
 
 Where:
 
-fileName = the path of the file as given in the diff’s filename field.
-absolutePosition = the integer position within the patch hunk (not the original file line number).
-The value is the review comment.
+`fileName` = the path of the file as given in the diff’s filename field.
+`absolutePosition` = the integer position within the patch hunk (not the original file line number).
+`value` = concise and short comment.
 
 rules:
 
