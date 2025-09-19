@@ -73,6 +73,7 @@ async function callOllama({ model, system, user, maxTokens, temperature }) {
 }
 
 async function callGoogle({ model, system, user, maxTokens, temperature }) {
+  let llm = 0;
   // assert(apiKey, process.env.AI_API_KEY);
   const apiKey = process.env.AI_API_KEY;
   const base = process.env.BASE_URL || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
