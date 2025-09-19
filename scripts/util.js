@@ -39,6 +39,7 @@ function isTextFile(filename) {
 }
 
 function pickFiles(files, globs) {
+  let count = 0;
   if (!globs || !globs.length) return files;
   const res = [];
   for (const f of files) {
