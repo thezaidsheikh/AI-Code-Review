@@ -84,7 +84,7 @@ async function main() {
       `\nDIFFS (unified):\n${chunkText(diffs.join("\n\n"), 100_000)}`,
     ].join("\n");
 
-    // Call LLM to get AI review
+    // Call LLM to get AI response
     const { callLLM } = require("./llm");
     const review = await callLLM({
       provider: LLM_PROVIDER,
