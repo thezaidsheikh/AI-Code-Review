@@ -117,7 +117,7 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
     // Post single comprehensive review with comments and approval decision
     const reviewEvent = githubComments.isApproved ? "APPROVE" : "REQUEST_CHANGES";
     const reviewBody = githubComments.isApproved ? `PR is looking great! Approved the PR` : `PR needs some changes.`;
-
+    const reviewComment = githubComments.isApproved ? "There are no issues that are tied to any specific lines." : "AI found general issues not tied to specific lines.";
     const githubReview = {
       owner,
       repo,
@@ -128,6 +128,8 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
 
     if (githubComments.comments.length > 0) {
       githubReview.comments = githubComments.comments;
+    } else {
+      githubReview.body = reviewComment;
     }
 
     await octokit.pulls.createReview(githubReview);
