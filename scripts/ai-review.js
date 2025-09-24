@@ -114,41 +114,38 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
     console.log("githubComments comments length =====>", githubComments.comments.length);
     console.log("githubComments =====>", JSON.stringify(githubComments));
 
-    // Post PR review with inline comments
+    // Post single comprehensive review with comments and approval decision
+    const reviewEvent = githubComments.isApproved ? "APPROVE" : "REQUEST_CHANGES";
+    const reviewBody = githubComments.isApproved ? `PR is looking great! Approved the PR` : `PR needs some changes.`;
+
+    // If we have specific comments, include them in the review
     if (githubComments.comments.length > 0) {
       await octokit.pulls.createReview({
         owner,
         repo,
         pull_number,
-        event: "COMMENT",
-        body: `AI-generated code review for ${selectedFilesCount} file(s).`,
+        event: reviewEvent,
+        body: reviewBody,
         comments: githubComments.comments,
       });
+      console.log(`✅ AI ${reviewEvent.toLowerCase().replace("_", " ")}d with ${githubComments.comments.length} file-specific comments.`);
+    } else {
+      // No specific comments, just post the approval/rejection
+      await octokit.pulls.createReview({
+        owner,
+        repo,
+        pull_number,
+        event: reviewEvent,
+        body: reviewBody,
+      });
+      console.log(`✅ AI ${reviewEvent.toLowerCase().replace("_", " ")}d the PR.`);
+    }
 
-      console.log(`✅ AI review posted with ${githubComments.comments.length} file-specific comments.`);
-    } else {
-      await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "No comments");
-    }
-    if (githubComments.isApproved) {
-      await octokit.pulls.createReview({
-        owner,
-        repo,
-        pull_number,
-        event: "APPROVE",
-        body: `PR is looking great! Approved the PR`,
-      });
-      console.log(`✅ AI approved the PR.`);
-    } else {
-      await octokit.pulls.createReview({
-        owner,
-        repo,
-        pull_number,
-        event: "REQUEST_CHANGES",
-        body: `PR needs some changes.`,
-      });
-      console.log(`✅ AI requested changes for the PR.`);
-    }
-    return { success: true, type: githubComments.isApproved ? "approved" : "changes_requested", commentCount: githubComments.comments.length };
+    return {
+      success: true,
+      type: githubComments.isApproved ? "approved" : "changes_requested",
+      commentCount: githubComments.comments.length,
+    };
   } catch (parseError) {
     console.error("Failed to parse AI response:", parseError.message);
     console.log("Raw AI response:", aiResponse);
