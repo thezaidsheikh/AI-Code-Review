@@ -128,7 +128,6 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
       console.log(`✅ AI review posted with ${githubComments.comments.length} file-specific comments.`);
     } else {
       await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "No comments");
-      console.log(`✅ AI review posted with ${githubComments.comments.length} file-specific comments.`);
     }
     if (githubComments.isApproved) {
       await octokit.pulls.createReview({
@@ -165,7 +164,7 @@ async function postGeneralReview(octokit, owner, repo, pull_number, aiResponse, 
     repo,
     pull_number,
     event: "COMMENT",
-    body: `Looks Great!`,
+    body: reason === "No comments" ? `Looks Great!` : `AI Code Review:\n\n${aiResponse.trim().slice(0, 65000)}`,
   });
 
   console.log(`✅ AI review posted as general comment (fallback: ${reason}).`);
