@@ -79,7 +79,7 @@ Always return JSON with this structure:
 
 - **General Review Summary:**
 
-  - If `isApproved` is `false` and there are no inline comments, include a general summary of the issues found in the `review` array as a single comment with `fileName` set to `"GENERAL"` and `absolutePosition` set to `1`.
+  - There are no comments in the `review` array and the PR isApproved should be true.
 
 - **No Extra Text:**
   - Do not output any text outside of the required JSON structure
