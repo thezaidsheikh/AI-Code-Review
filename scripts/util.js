@@ -5,6 +5,7 @@ function chunkText(text, limit) {
   return text.slice(0, limit);
 }
 
+// Check file is text file or not
 function isTextFile(filename) {
   const textExt = [
     ".js",
@@ -38,6 +39,7 @@ function isTextFile(filename) {
 }
 
 function pickFiles(files, globs) {
+  let count = 0;
   if (!globs || !globs.length) return files;
   const res = [];
   for (const f of files) {
