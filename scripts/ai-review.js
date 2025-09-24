@@ -95,8 +95,6 @@ async function main() {
       temperature: TEMPERATURE,
     });
 
-    let count = 0;
-
     // Process AI response and post review
     await processAIResponseAndPostReview(octokit, owner, repo, pull_number, review, selected.length);
   } catch (error) {
@@ -113,26 +111,42 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
 
     // Convert to GitHub comment format
     const githubComments = convertToGitHubComments(parsedComments);
-    console.log("githubComments length =====>", githubComments.length);
+    console.log("githubComments comments length =====>", githubComments.comments.length);
     console.log("githubComments =====>", JSON.stringify(githubComments));
 
     // Post PR review with inline comments
-    if (githubComments.length > 0) {
+    if (githubComments.comments.length > 0) {
       await octokit.pulls.createReview({
         owner,
         repo,
         pull_number,
         event: "COMMENT",
         body: `AI-generated code review for ${selectedFilesCount} file(s).`,
-        comments: githubComments,
+        comments: githubComments.comments,
       });
 
-      console.log(`✅ AI review posted with ${githubComments.length} file-specific comments.`);
-      return { success: true, type: "inline", commentCount: githubComments.length };
-    } else {
-      console.log("⚠️ No valid comments generated, posting general review.");
-      return await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "No valid comments generated");
+      console.log(`✅ AI review posted with ${githubComments.comments.length} file-specific comments.`);
     }
+    if (githubComments.isApproved) {
+      await octokit.pulls.createReview({
+        owner,
+        repo,
+        pull_number,
+        event: "APPROVE",
+        body: `AI approved the PR`,
+      });
+      console.log(`✅ AI approved the PR.`);
+    } else {
+      await octokit.pulls.createReview({
+        owner,
+        repo,
+        pull_number,
+        event: "REQUEST_CHANGES",
+        body: `AI requested changes for the PR`,
+      });
+      console.log(`✅ AI requested changes for the PR.`);
+    }
+    return { success: true, type: "inline", commentCount: githubComments.comments.length };
   } catch (parseError) {
     console.error("Failed to parse AI response:", parseError.message);
     console.log("Raw AI response:", aiResponse);
@@ -166,41 +180,70 @@ function cleanAndParseAIResponse(aiResponse) {
     cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "");
   }
 
-  return JSON.parse(cleanedResponse);
+  const parsed = JSON.parse(cleanedResponse);
+
+  // Validate the response structure
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Invalid response format: expected an object");
+  }
+
+  if (!("review" in parsed) || !Array.isArray(parsed.review)) {
+    throw new Error('Invalid response format: missing or invalid "review" array');
+  }
+
+  if (!("isApproved" in parsed) && typeof parsed.isApproved !== "boolean") {
+    console.warn('Response missing "isApproved" boolean field');
+  }
+
+  return parsed;
 }
 
 // Helper function to convert AI comments to GitHub format
-function convertToGitHubComments(aiComments) {
-  if (!Array.isArray(aiComments)) {
-    throw new Error("AI response is not an array");
+function convertToGitHubComments(aiResponse) {
+  if (!aiResponse || !Array.isArray(aiResponse.review)) {
+    throw new Error("Invalid AI response format: missing review array");
   }
 
   const githubComments = [];
+  const processedFiles = new Set();
 
-  for (const fileObject of aiComments) {
-    if (!fileObject.fileName || !fileObject.comments || !Array.isArray(fileObject.comments)) {
+  for (const fileObject of aiResponse.review) {
+    if (!fileObject.fileName || !Array.isArray(fileObject.comments)) {
       console.error("Invalid file object structure:", fileObject);
       continue;
     }
 
-    const path = fileObject.fileName;
-    const commentsArray = fileObject.comments;
+    // Skip duplicate files
+    if (processedFiles.has(fileObject.fileName)) {
+      console.warn(`Skipping duplicate file: ${fileObject.fileName}`);
+      continue;
+    }
+    processedFiles.add(fileObject.fileName);
 
-    for (const comment of commentsArray) {
+    for (const comment of fileObject.comments) {
       if (comment.absolutePosition === undefined || comment.value === undefined) {
         console.error("Invalid comment object structure:", comment);
         continue;
       }
 
+      const position = parseInt(comment.absolutePosition, 10);
+      if (isNaN(position) || position < 1) {
+        console.error("Invalid position value:", comment.absolutePosition);
+        continue;
+      }
+
       githubComments.push({
-        path: path,
-        position: parseInt(comment.absolutePosition),
+        path: fileObject.fileName,
+        position: position,
         body: comment.value,
       });
     }
   }
 
-  return githubComments;
+  return {
+    comments: githubComments,
+    isApproved: aiResponse.isApproved === true,
+  };
 }
 
 main().catch((err) => {
