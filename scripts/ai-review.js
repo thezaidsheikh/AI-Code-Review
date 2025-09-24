@@ -118,28 +118,20 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
     const reviewEvent = githubComments.isApproved ? "APPROVE" : "REQUEST_CHANGES";
     const reviewBody = githubComments.isApproved ? `PR is looking great! Approved the PR` : `PR needs some changes.`;
 
-    // If we have specific comments, include them in the review
+    const githubReview = {
+      owner,
+      repo,
+      pull_number,
+      event: reviewEvent,
+      body: reviewBody,
+    };
+
     if (githubComments.comments.length > 0) {
-      await octokit.pulls.createReview({
-        owner,
-        repo,
-        pull_number,
-        event: reviewEvent,
-        body: reviewBody,
-        comments: githubComments.comments,
-      });
-      console.log(`✅ AI ${reviewEvent.toLowerCase().replace("_", " ")}d with ${githubComments.comments.length} file-specific comments.`);
-    } else {
-      // No specific comments, just post the approval/rejection
-      await octokit.pulls.createReview({
-        owner,
-        repo,
-        pull_number,
-        event: reviewEvent,
-        body: reviewBody,
-      });
-      console.log(`✅ AI ${reviewEvent.toLowerCase().replace("_", " ")}d the PR.`);
+      githubReview.comments = githubComments.comments;
     }
+
+    await octokit.pulls.createReview(githubReview);
+    console.log(`✅ AI ${reviewEvent.toLowerCase().replace("_", " ")}d the PR.`);
 
     return {
       success: true,
@@ -161,7 +153,7 @@ async function postGeneralReview(octokit, owner, repo, pull_number, aiResponse, 
     repo,
     pull_number,
     event: "COMMENT",
-    body: reason === "No comments" ? `Looks Great!` : `AI Code Review:\n\n${aiResponse.trim().slice(0, 65000)}`,
+    body: `AI Code Review:\n\n${aiResponse.trim().slice(0, 65000)}`,
   });
 
   console.log(`✅ AI review posted as general comment (fallback: ${reason}).`);
@@ -192,6 +184,7 @@ function cleanAndParseAIResponse(aiResponse) {
 
   if (!("isApproved" in parsed) || typeof parsed.isApproved !== "boolean") {
     console.warn('Response missing "isApproved" boolean field');
+    parsed.isApproved = false;
   }
 
   return parsed;
