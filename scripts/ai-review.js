@@ -126,6 +126,9 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
       });
 
       console.log(`✅ AI review posted with ${githubComments.comments.length} file-specific comments.`);
+    } else {
+      await postGeneralReview(octokit, owner, repo, pull_number, aiResponse, "No comments");
+      console.log(`✅ AI review posted with ${githubComments.comments.length} file-specific comments.`);
     }
     if (githubComments.isApproved) {
       await octokit.pulls.createReview({
@@ -133,7 +136,7 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
         repo,
         pull_number,
         event: "APPROVE",
-        body: `AI approved the PR`,
+        body: `PR is looking great! Approved the PR`,
       });
       console.log(`✅ AI approved the PR.`);
     } else {
@@ -142,11 +145,11 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
         repo,
         pull_number,
         event: "REQUEST_CHANGES",
-        body: `AI requested changes for the PR`,
+        body: `PR needs some changes.`,
       });
       console.log(`✅ AI requested changes for the PR.`);
     }
-    return { success: true, type: "inline", commentCount: githubComments.comments.length };
+    return { success: true, type: githubComments.isApproved ? "approved" : "changes_requested", commentCount: githubComments.comments.length };
   } catch (parseError) {
     console.error("Failed to parse AI response:", parseError.message);
     console.log("Raw AI response:", aiResponse);
@@ -162,7 +165,7 @@ async function postGeneralReview(octokit, owner, repo, pull_number, aiResponse, 
     repo,
     pull_number,
     event: "COMMENT",
-    body: `AI Code Review:\n\n${aiResponse.trim().slice(0, 65000)}`,
+    body: `Looks Great!`,
   });
 
   console.log(`✅ AI review posted as general comment (fallback: ${reason}).`);
@@ -191,7 +194,7 @@ function cleanAndParseAIResponse(aiResponse) {
     throw new Error('Invalid response format: missing or invalid "review" array');
   }
 
-  if (!("isApproved" in parsed) && typeof parsed.isApproved !== "boolean") {
+  if (!("isApproved" in parsed) || typeof parsed.isApproved !== "boolean") {
     console.warn('Response missing "isApproved" boolean field');
   }
 
