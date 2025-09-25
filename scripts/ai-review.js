@@ -43,6 +43,8 @@ async function main() {
 
     // Get PR metadata
     const { data: pr } = await octokit.pulls.get({ owner, repo, pull_number });
+    const headSha = pr.head.sha;
+    console.log("headSha: ", headSha);
 
     // Get changed files (with patches)
     const files = await octokit.paginate(octokit.pulls.listFiles, { owner, repo, pull_number, per_page: 100 });
@@ -96,7 +98,7 @@ async function main() {
     });
 
     // Process AI response and post review
-    await processAIResponseAndPostReview(octokit, owner, repo, pull_number, review, selected.length);
+    await processAIResponseAndPostReview(octokit, owner, repo, pull_number, headSha, review, selected.length);
   } catch (error) {
     console.error("Error in main:", error);
     process.exit(1);
@@ -104,7 +106,7 @@ async function main() {
 }
 
 // Main function to handle AI response and post GitHub review
-async function processAIResponseAndPostReview(octokit, owner, repo, pull_number, aiResponse, selectedFilesCount) {
+async function processAIResponseAndPostReview(octokit, owner, repo, pull_number, headSha, aiResponse, selectedFilesCount) {
   try {
     // Parse the AI response
     const parsedComments = cleanAndParseAIResponse(aiResponse);
@@ -115,9 +117,9 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
     console.log("githubComments =====>", JSON.stringify(githubComments));
 
     // Post single comprehensive review with comments and approval decision
-    const reviewEvent = githubComments.isApproved ? "APPROVE" : "REQUEST_CHANGES";
+    const reviewEvent = githubComments.isApproved ? "COMMENT" : "REQUEST_CHANGES";
     const reviewBody = githubComments.isApproved ? `PR is looking great! Approved the PR` : `PR needs some changes.`;
-    const reviewComment = githubComments.isApproved ? "There are no issues that are tied to any specific lines." : "AI found general issues not tied to specific lines.";
+
     const githubReview = {
       owner,
       repo,
@@ -129,11 +131,14 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
     if (githubComments.comments.length > 0) {
       githubReview.comments = githubComments.comments;
     } else {
-      githubReview.body = reviewComment;
+      githubReview.body = githubComments.isApproved ? "There are no issues that are tied to any specific lines." : "AI found general issues not tied to specific lines.";
     }
 
     await octokit.pulls.createReview(githubReview);
     console.log(`✅ AI ${reviewEvent.toLowerCase().replace("_", " ")}d the PR.`);
+
+    // Set commit status based on AI review result
+    await setCommitStatus(octokit, owner, repo, pull_number, headSha, githubComments.isApproved);
 
     return {
       success: true,
@@ -238,6 +243,30 @@ function convertToGitHubComments(aiResponse) {
     comments: githubComments,
     isApproved: aiResponse.isApproved === true,
   };
+}
+
+// Helper function to set commit status based on AI review result
+async function setCommitStatus(octokit, owner, repo, pull_number, headSha, isApproved) {
+  try {
+    const status = isApproved ? "success" : "failure";
+    const description = isApproved ? "AI Code Review: All checks passed" : "AI Code Review: Issues found - review required";
+
+    const statusData = {
+      owner,
+      repo,
+      sha: headSha,
+      state: status,
+      target_url: `https://github.com/${owner}/${repo}/pull/${pull_number}`,
+      description: description,
+      context: "AI Code Review",
+    };
+
+    await octokit.repos.createCommitStatus(statusData);
+    console.log(`✅ Commit status set to ${status} for SHA ${headSha}`);
+  } catch (error) {
+    console.error("Error setting commit status:", error);
+    // Don't fail the entire process if status setting fails
+  }
 }
 
 main().catch((err) => {
