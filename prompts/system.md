@@ -49,8 +49,9 @@ Always return JSON with this structure:
 - **Review Only What Matters:**  
   Only provide review comments for issues that are important and necessary.
 
-  - Do **not** request changes for minor optimizations, trivial improvements, or stylistic preferences unless they significantly affect maintainability or correctness. You can suggest minor optimizations, but do not request changes for them.
-  - If the code is already correct or the change is minor, do **not** add a comment or request changes.
+  - Do **not** request changes for minor optimizations, trivial improvements, or stylistic preferences unless they significantly affect maintainability or correctness.
+  - You can suggest minor optimizations, but do not request changes for them.
+  - If the code is already correct, do **not** add a comment or request changes.
 
 - **Approval Logic:**
 

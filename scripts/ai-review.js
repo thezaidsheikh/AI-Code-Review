@@ -108,8 +108,6 @@ async function main() {
 // Main function to handle AI response and post GitHub review
 async function processAIResponseAndPostReview(octokit, owner, repo, pull_number, headSha, aiResponse, selectedFilesCount) {
   try {
-    let count = 0;
-
     // Parse the AI response
     const parsedComments = cleanAndParseAIResponse(aiResponse);
 
