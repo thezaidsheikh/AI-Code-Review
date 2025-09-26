@@ -114,7 +114,6 @@ async function processAIResponseAndPostReview(octokit, owner, repo, pull_number,
     // Convert to GitHub comment format
     const githubComments = convertToGitHubComments(parsedComments);
     console.log("githubComments comments length =====>", githubComments.comments.length);
-    console.log("githubComments =====>", JSON.stringify(githubComments));
 
     // Post single comprehensive review with comments and approval decision
     const reviewEvent = githubComments.isApproved ? "COMMENT" : "REQUEST_CHANGES";
