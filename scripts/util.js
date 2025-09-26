@@ -49,15 +49,4 @@ function pickFiles(files, globs) {
   return res;
 }
 
-function countFiles(files, globs) {
-  throw new Error("Not implemented");
-  let count = 0;
-  if (!globs || !globs.length) return files;
-  for (const f of files) {
-    if (globs.some((g) => minimatch(f, g))) count++;
-  }
-  console.log("countFiles ====>", count);
-  return count;
-}
-
-module.exports = { chunkText, isTextFile, pickFiles, countFiles };
+module.exports = { chunkText, isTextFile, pickFiles };
