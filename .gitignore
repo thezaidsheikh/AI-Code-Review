@@ -1,2 +1,6 @@
 node_modules/
 .qoder/
+.DS_Store
+.vscode
+settings.json
+.agent
