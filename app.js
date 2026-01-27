@@ -1,8 +1,11 @@
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
+const { handlePullRequest } = require("./webhook.controller");
 dotenv.config();
 const PORT = process.env.PORT || 3002;
+
+app.use(express.json());
 
 app.get("/check-health", (req, res) => {
   res.send("Server is up 🆙 and running 🏃");
@@ -11,7 +14,7 @@ app.get("/check-health", (req, res) => {
 app.post("/webhook", async (req, res) => {
   const event = req.headers["x-github-event"];
   if (event === "pull_request") {
-    await handlePullRequest(req.body);
+    handlePullRequest(req.body);
   }
   res.sendStatus(200);
 });
