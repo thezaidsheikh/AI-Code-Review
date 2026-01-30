@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
-const { handlePullRequest } = require("./webhook.controller");
+const { handlePullRequest } = require("./controller/webhook.controller");
 dotenv.config();
 const PORT = process.env.PORT || 3002;
 

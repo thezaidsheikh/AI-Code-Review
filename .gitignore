@@ -4,3 +4,5 @@ node_modules/
 .vscode
 settings.json
 .agent
+.env
+github-app.pem

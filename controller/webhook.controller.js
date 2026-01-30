@@ -1,5 +1,5 @@
-const { extractChangedLines } = require("./diff");
-const { fetchFileLines } = require("./files");
+const { extractChangedLines } = require("../helper/diff");
+const { fetchFileLines } = require("../helper/files");
 const fs = require("fs");
 const path = require("path");
 
@@ -7,8 +7,10 @@ const LLM_PROVIDER = process.env.LLM_PROVIDER || "google";
 const MODEL = process.env.MODEL || "gemini-2.5-flash";
 const MAX_TOKENS = parseInt(process.env.MAX_TOKENS || "2500", 10);
 const TEMPERATURE = parseFloat(process.env.TEMPERATURE || "0.2");
-const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, "prompts", "review.md"), "utf8");
+const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, "..", "prompts", "review.md"), "utf8");
+const RUBRIC = fs.readFileSync(path.join(__dirname, "..", "prompts", "rubric.md"), "utf8");
 
+// Get installation octokit for App auth
 async function getInstallationOctokit(installationId) {
   const { createAppAuth } = await import("@octokit/auth-app");
   const { Octokit } = await import("@octokit/rest");
@@ -27,6 +29,7 @@ async function getInstallationOctokit(installationId) {
   return octokit;
 }
 
+// Handle pull request
 const handlePullRequest = async (payload) => {
   try {
     const owner = payload.repository.owner.login;
@@ -34,6 +37,14 @@ const handlePullRequest = async (payload) => {
     const pull_number = payload.pull_request.number;
     const installationId = payload.installation?.id; // IMPORTANT for App auth
     const headSha = payload.pull_request.head.sha; // for file content at PR head
+    const action = payload.action;
+
+    if (["opened", "synchronize", "reopened"].includes(payload.action) === false) {
+      console.log("Skipping PR action:", action);
+      return;
+    }
+    console.log("Processing PR action:", action);
+
     const octokit = await getInstallationOctokit(installationId);
 
     const filesResp = await octokit.pulls.listFiles({
@@ -44,21 +55,18 @@ const handlePullRequest = async (payload) => {
 
     const files = filesResp.data;
 
-    console.log(`Files changed: ${files.length}`);
-
     const reviewUnits = await generateReviewUnits(octokit, owner, repo, files, headSha);
-
-    console.log("Review units:", reviewUnits);
 
     const context = {
       repo: `${owner}/${repo}`,
       files: reviewUnits,
+      RUBRIC,
     };
 
     const userContent = JSON.stringify(context, null, 2);
 
     // Call LLM to get AI response
-    const { callLLM } = require("./llm");
+    const { callLLM } = require("../helper/llm");
     const review = await callLLM({
       provider: LLM_PROVIDER,
       model: MODEL,
@@ -68,9 +76,41 @@ const handlePullRequest = async (payload) => {
       temperature: TEMPERATURE,
     });
 
-    console.log("AI Review:", review);
+    // Create commit status to prevent merging
+    await octokit.repos.createCommitStatus({
+      owner,
+      repo,
+      sha: headSha,
+      state: review.decision !== "approve" ? "failure" : "success",
+      context: "ai-pr-review",
+      description: review.decision === "approve" ? "AI review passed" : "AI review requested changes",
+      target_url: payload.pull_request.html_url, // optional UI
+    });
 
-    // TODO: Post comments to the PR
+    // Create review with comments
+    await octokit.pulls.createReview({
+      owner,
+      repo,
+      pull_number,
+      event: "COMMENT",
+      comments: review.comments.map((c) => ({
+        path: c.path,
+        line: c.line,
+        side: "RIGHT",
+        body: c.comment,
+      })),
+    });
+
+    if (review.decision === "request_changes") {
+      // Request changes if AI review is not approved
+      await octokit.pulls.createReview({
+        owner,
+        repo,
+        pull_number,
+        event: "REQUEST_CHANGES",
+        body: "Automated review: see inline comments.",
+      });
+    }
   } catch (error) {
     console.error("Error handling pull request:", error);
   }

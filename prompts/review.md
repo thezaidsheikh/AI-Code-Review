@@ -10,18 +10,24 @@ Rules:
 
 Input JSON contains files with changed hunks.
 
-Return ONLY valid JSON in this format:
+Return ONLY valid JSON in this exact format (no markdown, no code blocks, no explanation):
 
-```
 {
 "comments": [
-        {
-        "path": "src/auth.ts",
-        "line": 42,
-        "severity": "minor|major",
-        "comment": "..."
-        }
-    ],
-    "decision": "approve|request_changes"
+{
+"path": "src/auth.ts",
+"line": 42,
+"severity": "minor|major",
+"comment": "..."
 }
-```
+],
+"decision": "approve|request_changes"
+}
+
+IMPORTANT:
+
+- Do NOT wrap the response in `json` or any markdown
+- Do NOT add any explanation or text outside the JSON
+- The response must start with { and end with }
+- Use "isApproved": true for approve, "isApproved": false for request_changes
+- Comments array can be empty if no issues found
