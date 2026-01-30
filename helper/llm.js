@@ -74,7 +74,6 @@ async function callOllama({ model, system, user, maxTokens, temperature }) {
 
 async function callGoogle({ model, system, user, maxTokens, temperature }) {
   let llm = 0;
-  // assert(apiKey, process.env.AI_API_KEY);
   const apiKey = process.env.AI_API_KEY;
   const base = process.env.BASE_URL || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const res = await fetch(`${base}`, {
@@ -94,7 +93,7 @@ async function callGoogle({ model, system, user, maxTokens, temperature }) {
   });
   if (!res.ok) throw new Error(`Google error: ${res.status} ${await res.text()}`);
   const json = await res.json();
-  return json.candidates?.[0].content?.parts?.[0].text || "";
+  return json.candidates?.[0].content?.parts?.[0].text ? JSON.parse(json.candidates?.[0].content?.parts?.[0].text) : "" || "";
 }
 
 exports.callLLM = async (cfg) => {
