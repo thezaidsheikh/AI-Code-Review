@@ -31,3 +31,4 @@ IMPORTANT:
 - The response must start with { and end with }
 - Use "isApproved": true for approve, "isApproved": false for request_changes
 - Comments array can be empty if no issues found
+- If any suggestions are given, and the severity is "minor", or can be approved, mention in the comment.
