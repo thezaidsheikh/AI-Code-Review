@@ -1,5 +1,3 @@
-const { extractChangedLines } = require("../helper/diff");
-const { fetchFileLines } = require("../helper/files");
 const fs = require("fs");
 const path = require("path");
 const { getInstallationOctokit, fetchPRFiles, generateReviewUnits } = require("../utils/octakit");

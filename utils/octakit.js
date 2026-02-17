@@ -1,3 +1,6 @@
+const { extractChangedLines } = require("../helper/diff");
+const { fetchFileLines } = require("../helper/files");
+
 // Get installation octokit for App auth
 async function getInstallationOctokit(installationId) {
   const { createAppAuth } = await import("@octokit/auth-app");
