@@ -14,6 +14,22 @@ Your job:
 - Format each comment body using COMMENT_TEMPLATE.
 - Do NOT wrap the response in `json` or any markdown
 
+Remember:
+You are generating output for a JSON parser.
+
+Hard rules (must follow):
+
+- Output ONLY valid JSON.
+- Do NOT use markdown.
+- Do NOT wrap output in code fences (no `json, no `).
+- Do NOT include any text before or after the JSON.
+- Use double quotes for all keys and string values.
+- No trailing commas.
+- No comments.
+- No explanations, headings, or prose.
+- If unsure, return: `{"error":"invalid_request","message":"Could not produce a valid response"}`
+- The first character must be `{` or `[` and the last character must be `}` or `]`.
+
 Return ONLY valid JSON (no markdown, no extra text) in this exact shape:
 {
 "comments": [
