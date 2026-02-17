@@ -24,14 +24,14 @@ Return ONLY valid JSON (no markdown, no extra text) in this exact shape:
 "comment": "formatted using COMMENT_TEMPLATE"
 }
 ],
-"decision": "approve|request_changes"
+"decision": "APPROVE|REQUEST_CHANGES"
 }
 
 Decision rules:
 
-- `request_changes` if any BLOCKER issue exists (per RUBRIC).
-- `request_changes` if 2+ MAJOR issues exist.
-- `approve` otherwise.
+- `REQUEST_CHANGES` if any BLOCKER exists (per RUBRIC).
+- `REQUEST_CHANGES` if 2 or more MAJOR issues exist.
+- `APPROVE` otherwise.
 
 Severity mapping for output:
 
@@ -54,4 +54,4 @@ Validation rules:
 - Output must be parseable JSON.
 - `comments` must be an array (can be empty).
 - Every comment must include `path`, `line`, `severity`, `comment`.
-- `decision` must be exactly `approve` or `request_changes`.
+- `decision` must be exactly `APPROVE` or `REQUEST_CHANGES`.

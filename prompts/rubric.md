@@ -4,24 +4,27 @@ Goal:
 Catch high-impact issues before merge, keep review concise, and approve only when basic quality gates pass.
 
 How to classify findings:
+
 - BLOCKER: must be fixed before merge (security/correctness/reliability risk).
 - MAJOR: important issue; usually request changes.
 - MINOR: improvement suggestion; should not block approval by itself.
 
 Decision policy:
-- decision = "request_changes" if any BLOCKER exists.
-- decision = "request_changes" if 2 or more MAJOR issues exist.
-- decision = "approve" when there are no BLOCKER issues and fewer than 2 MAJOR issues.
+
+- decision = "REQUEST_CHANGES" if any BLOCKER exists.
+- decision = "REQUEST_CHANGES" if 2 or more MAJOR issues exist.
+- decision = "APPROVE" when there are no BLOCKER issues and fewer than 2 MAJOR issues.
 - MINOR issues can be suggested while still approving.
 
 Output discipline:
+
 - Comment only on real, actionable issues.
 - Avoid style-only nitpicks unless they impact maintainability or cause defects.
 - Keep comments concise and specific.
 
-----------------------------------------
-CATEGORY 1: CORRECTNESS & RELIABILITY
-----------------------------------------
+---
+
+## CATEGORY 1: CORRECTNESS & RELIABILITY
 
 [COR-001] Null/undefined safety (BLOCKER)
 Check newly added/changed logic for possible null/undefined dereference without guard.
@@ -38,9 +41,9 @@ Check off-by-one, empty arrays/maps, boundary conditions, and missing default pa
 [COR-005] Contract compatibility (MAJOR)
 No unintentional API behavior changes (status codes, response shape, required fields).
 
-----------------------------------------
-CATEGORY 2: SECURITY
-----------------------------------------
+---
+
+## CATEGORY 2: SECURITY
 
 [SEC-001] Secrets exposure (BLOCKER)
 No hardcoded credentials, tokens, private keys, or leaked env values in code/logs/tests.
@@ -57,9 +60,9 @@ No unsanitized filesystem/network targets from user-controlled input.
 [SEC-005] Unsafe output or reflective data handling (MAJOR)
 Flag likely XSS or unsafe rendering/serialization behavior in changed code.
 
-----------------------------------------
-CATEGORY 3: PERFORMANCE & SCALABILITY
-----------------------------------------
+---
+
+## CATEGORY 3: PERFORMANCE & SCALABILITY
 
 [PER-001] N+1 query or repeated expensive I/O in loops (MAJOR)
 Detect avoidable repeated DB/network/disk calls in iterative paths.
@@ -73,9 +76,9 @@ No missing limits/pagination/timeouts/retries on potentially large or external o
 [PER-004] Wasteful allocations or duplicate computation (MINOR)
 Suggest optimization only when meaningful; do not block merge for tiny gains.
 
-----------------------------------------
-CATEGORY 4: CONCURRENCY & ASYNC SAFETY
-----------------------------------------
+---
+
+## CATEGORY 4: CONCURRENCY & ASYNC SAFETY
 
 [CON-001] Async misuse (BLOCKER)
 Missing await, unhandled promise rejection, or race-causing async sequencing bugs.
@@ -86,9 +89,9 @@ Non-thread-safe/shared mutable state without synchronization or safe design.
 [CON-003] Resource lifecycle correctness (MAJOR)
 Connections/files/locks/timers are properly cleaned up on all control paths.
 
-----------------------------------------
-CATEGORY 5: CODE HEALTH
-----------------------------------------
+---
+
+## CATEGORY 5: CODE HEALTH
 
 [QLT-001] Dead/debug code in production paths (MAJOR)
 No leftover debug logs, commented-out logic, unreachable blocks, or unused critical imports.
@@ -120,9 +123,9 @@ Flag inappropriate loop usage that causes avoidable complexity/performance issue
 [QLT-010] Loop readability improvements (MINOR)
 Suggest clearer iteration style (`for...of`, array methods, extracted helper) when behavior is already correct.
 
-----------------------------------------
-REVIEWER ENFORCEMENT NOTES
-----------------------------------------
+---
+
+## REVIEWER ENFORCEMENT NOTES
 
 - If issue is BLOCKER: request changes.
 - If issue is MAJOR:
