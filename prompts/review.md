@@ -12,6 +12,7 @@ Your job:
 - Find only real, actionable issues in changed code.
 - Use RUBRIC as the quality gate.
 - Format each comment body using COMMENT_TEMPLATE.
+- Do NOT wrap the response in `json` or any markdown
 
 Return ONLY valid JSON (no markdown, no extra text) in this exact shape:
 {

@@ -29,6 +29,7 @@ Field guidance:
 - `fix_example` is optional but recommended for complex issues.
 - `confidence` should be one of `high`, `medium`, or `low`.
 - Keep each comment concise and avoid praise/filler.
+- Do NOT wrap the response in `json` or any markdown
 
 Compact text format (if JSON is not needed):
 [RULE_ID][SEVERITY][approval_impact=<request_changes|approve_with_suggestion>] <short title>
