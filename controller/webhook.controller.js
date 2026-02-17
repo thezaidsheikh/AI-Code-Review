@@ -9,6 +9,7 @@ const MAX_TOKENS = parseInt(process.env.MAX_TOKENS || "2500", 10);
 const TEMPERATURE = parseFloat(process.env.TEMPERATURE || "0.2");
 const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, "..", "prompts", "review.md"), "utf8");
 const RUBRIC = fs.readFileSync(path.join(__dirname, "..", "prompts", "rubric.md"), "utf8");
+const COMMENT_TEMPLATE = fs.readFileSync(path.join(__dirname, "..", "prompts", "comment-template.md"), "utf8");
 
 // Get installation octokit for App auth
 async function getInstallationOctokit(installationId) {
@@ -61,6 +62,7 @@ const handlePullRequest = async (payload) => {
       repo: `${owner}/${repo}`,
       files: reviewUnits,
       RUBRIC,
+      COMMENT_TEMPLATE,
     };
 
     const userContent = JSON.stringify(context, null, 2);
@@ -76,6 +78,10 @@ const handlePullRequest = async (payload) => {
       temperature: TEMPERATURE,
     });
 
+    if (!review || !review.decision || !review.comments) {
+      console.log("No review generated");
+      return;
+    }
     // Create commit status to prevent merging
     await octokit.repos.createCommitStatus({
       owner,
@@ -101,7 +107,7 @@ const handlePullRequest = async (payload) => {
       })),
     });
 
-    if (review.decision === "request_changes") {
+    if (review.decision === "request_changes" && review.comments.length > 0) {
       // Request changes if AI review is not approved
       await octokit.pulls.createReview({
         owner,
@@ -111,8 +117,16 @@ const handlePullRequest = async (payload) => {
         body: "Automated review: see inline comments.",
       });
     }
+    return {
+      success: true,
+      review,
+    };
   } catch (error) {
     console.error("Error handling pull request:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
   }
 };
 
