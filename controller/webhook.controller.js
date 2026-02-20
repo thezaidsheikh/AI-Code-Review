@@ -53,8 +53,11 @@ const handlePullRequest = async (payload) => {
       temperature: TEMPERATURE,
     });
 
+    const decision = String(review?.decision || "").toUpperCase();
+    const comments = Array.isArray(review?.comments) ? review.comments : [];
+
     // Validate LLM response structure
-    if (!review || !review.decision || !review.comments) {
+    if (!["APPROVE", "REQUEST_CHANGES"].includes(decision)) {
       console.log("No review generated");
       return;
     }
@@ -64,19 +67,19 @@ const handlePullRequest = async (payload) => {
       owner,
       repo,
       sha: headSha,
-      state: review.decision !== "APPROVE" ? "failure" : "success",
+      state: decision !== "APPROVE" ? "failure" : "success",
       context: "ai-pr-review",
-      description: review.decision === "APPROVE" ? "AI review passed" : "AI review requested changes",
+      description: decision === "APPROVE" ? "AI review passed" : "AI review requested changes",
       target_url: payload.pull_request.html_url, // optional UI
     });
 
-    if (review.comments.length == 0) {
+    if (comments.length == 0) {
       // Request changes if AI review is not approved
       await octokit.pulls.createReview({
         owner,
         repo,
         pull_number,
-        event: review.decision,
+        event: decision,
         body: "Automated review: no actionable issues found.",
       });
     } else {
@@ -85,8 +88,8 @@ const handlePullRequest = async (payload) => {
         owner,
         repo,
         pull_number,
-        event: review.decision,
-        comments: review.comments.map((c) => ({
+        event: decision,
+        comments: comments.map((c) => ({
           path: c.path,
           line: c.line,
           side: "RIGHT",

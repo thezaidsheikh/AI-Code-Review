@@ -2,6 +2,82 @@ const assert = (cond, msg) => {
   if (!cond) throw new Error(msg);
 };
 
+function stripCodeFences(text) {
+  const trimmed = (text || "").trim();
+  if (!trimmed.startsWith("```")) return trimmed;
+  return trimmed.replace(/^```[a-zA-Z0-9_-]*\s*/, "").replace(/\s*```$/, "").trim();
+}
+
+function extractFirstJsonBlock(text) {
+  const src = stripCodeFences(text);
+  if (!src) return "";
+
+  let start = -1;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === "{" || ch === "[") {
+      start = i;
+      break;
+    }
+  }
+  if (start === -1) return "";
+
+  const open = src[start];
+  const close = open === "{" ? "}" : "]";
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < src.length; i++) {
+    const ch = src[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+
+    if (ch === open) depth++;
+    if (ch === close) {
+      depth--;
+      if (depth === 0) {
+        return src.slice(start, i + 1);
+      }
+    }
+  }
+
+  return "";
+}
+
+function parseModelJson(raw) {
+  if (raw && typeof raw === "object") return raw;
+  const text = typeof raw === "string" ? raw : "";
+  if (!text.trim()) throw new Error("LLM returned an empty response");
+
+  try {
+    return JSON.parse(stripCodeFences(text));
+  } catch (_err) {
+    const extracted = extractFirstJsonBlock(text);
+    if (!extracted) {
+      throw new Error("LLM response did not contain a valid JSON object/array");
+    }
+    try {
+      return JSON.parse(extracted);
+    } catch (err) {
+      throw new Error(`Failed to parse LLM JSON: ${err.message}`);
+    }
+  }
+}
+
 async function callOpenAI({ model, system, user, maxTokens, temperature }) {
   const apiKey = process.env.OPENAI_API_KEY;
   assert(apiKey, 'OPENAI_API_KEY is required for provider "openai"');
@@ -93,14 +169,21 @@ async function callGoogle({ model, system, user, maxTokens, temperature }) {
   });
   if (!res.ok) throw new Error(`Google error: ${res.status} ${await res.text()}`);
   const json = await res.json();
-  return json.candidates?.[0].content?.parts?.[0].text ? JSON.parse(json.candidates?.[0].content?.parts?.[0].text) : "" || "";
+  return json.candidates?.[0].content?.parts?.[0].text || "";
 }
 
 exports.callLLM = async (cfg) => {
   const p = (cfg.provider || "google").toLowerCase();
-  if (p === "google") return callGoogle(cfg);
-  if (p === "openai") return callOpenAI(cfg);
-  if (p === "openrouter") return callOpenRouter(cfg);
-  if (p === "ollama") return callOllama(cfg);
-  throw new Error(`Unknown LLM provider: ${cfg.provider}`);
+  let raw = "";
+  if (p === "google") raw = await callGoogle(cfg);
+  else if (p === "openai") raw = await callOpenAI(cfg);
+  else if (p === "openrouter") raw = await callOpenRouter(cfg);
+  else if (p === "ollama") raw = await callOllama(cfg);
+  else throw new Error(`Unknown LLM provider: ${cfg.provider}`);
+
+  const parsed = parseModelJson(raw);
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("LLM response JSON must be an object");
+  }
+  return parsed;
 };

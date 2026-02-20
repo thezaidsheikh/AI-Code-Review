@@ -23,6 +23,8 @@ Hard rules (must follow):
 - Do NOT use markdown.
 - Do NOT wrap output in code fences (no `json, no `).
 - Do NOT include any text before or after the JSON.
+- Return exactly one top-level JSON object (not multiple objects, not an array).
+- Do not append notes like "done", "review complete", or any trailing prose after the closing `}`.
 - Use double quotes for all keys and string values.
 - No trailing commas.
 - No comments.
@@ -62,12 +64,14 @@ Comment selection rules:
 - Do not repeat the same root cause multiple times in a file.
 - Keep each comment concise and specific.
 - Use exact changed `path` and a valid changed `line`.
-- If no actionable issues exist, return `"comments": []` and `"decision": "approve"`.
+- If no actionable issues exist, return `"comments": []` and `"decision": "APPROVE"`.
 
 Validation rules:
 
 - Output must start with `{` and end with `}`.
+- Output must contain exactly one JSON document and nothing else.
 - Output must be parseable JSON.
 - `comments` must be an array (can be empty).
 - Every comment must include `path`, `line`, `severity`, `comment`.
 - `decision` must be exactly `APPROVE` or `REQUEST_CHANGES`.
+- Before returning, internally verify: `JSON.parse(output)` succeeds with no trailing characters.
