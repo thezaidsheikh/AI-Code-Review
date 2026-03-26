@@ -5,7 +5,10 @@ const assert = (cond, msg) => {
 function stripCodeFences(text) {
   const trimmed = (text || "").trim();
   if (!trimmed.startsWith("```")) return trimmed;
-  return trimmed.replace(/^```[a-zA-Z0-9_-]*\s*/, "").replace(/\s*```$/, "").trim();
+  return trimmed
+    .replace(/^```[a-zA-Z0-9_-]*\s*/, "")
+    .replace(/\s*```$/, "")
+    .trim();
 }
 
 function extractFirstJsonBlock(text) {
@@ -35,13 +38,13 @@ function extractFirstJsonBlock(text) {
         escaped = false;
       } else if (ch === "\\") {
         escaped = true;
-      } else if (ch === "\"") {
+      } else if (ch === '"') {
         inString = false;
       }
       continue;
     }
 
-    if (ch === "\"") {
+    if (ch === '"') {
       inString = true;
       continue;
     }
@@ -149,27 +152,32 @@ async function callOllama({ model, system, user, maxTokens, temperature }) {
 }
 
 async function callGoogle({ model, system, user, maxTokens, temperature }) {
-  let llm = 0;
-  const apiKey = process.env.AI_API_KEY;
-  const base = process.env.BASE_URL || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-  const res = await fetch(`${base}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: `${system}\n\n${user}`,
-            },
-          ],
-        },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error(`Google error: ${res.status} ${await res.text()}`);
-  const json = await res.json();
-  return json.candidates?.[0].content?.parts?.[0].text || "";
+  try {
+    let llm = 0;
+    const apiKey = process.env.AI_API_KEY;
+    const base = process.env.BASE_URL || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const res = await fetch(`${base}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `${system}\n\n${user}`,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+    if (!res.ok) throw new Error(`Google error: ${res.status} ${await res.text()}`);
+    const json = await res.json();
+    return json.candidates?.[0].content?.parts?.[0].text || "";
+  } catch (error) {
+    console.error("Error calling Google:", error);
+    throw error;
+  }
 }
 
 exports.callLLM = async (cfg) => {

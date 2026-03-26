@@ -68,8 +68,8 @@ const handlePullRequest = async (payload) => {
       repo,
       sha: headSha,
       state: decision !== "APPROVE" ? "failure" : "success",
-      context: "ai-pr-review",
-      description: decision === "APPROVE" ? "AI review passed" : "AI review requested changes",
+      context: "mergeguard-ai",
+      description: decision === "APPROVE" ? "MergeGuard AI Review Passed" : "MergeGuard AI Review Requested Changes",
       target_url: payload.pull_request.html_url, // optional UI
     });
 
